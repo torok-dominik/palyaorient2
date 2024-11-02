@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h2>Admin Dashboard</h2>
+    <h3>Diákok regisztrációi:</h3>
+    <table>
+        <tr>
+            <th>E-mail</th>
+            <th>Első idősáv</th>
+            <th>Második idősáv</th>
+            <th>Harmadik idősáv</th>
+        </tr>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.email }}</td>
+            <td>{{ student.lecture1 }}</td>
+            <td>{{ student.lecture2 }}</td>
+            <td>{{ student.lecture3 }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
