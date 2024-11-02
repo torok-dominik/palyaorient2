@@ -1,52 +1,59 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, request, render_template, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///registrations.db'
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'
 db = SQLAlchemy(app)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    surname = db.Column(db.String(50), nullable=False)
+    first_name = db.Column(db.String(50), nullable=False)
+    class_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    lecture1 = db.Column(db.String(10), nullable=False)
-    lecture2 = db.Column(db.String(10), nullable=False)
-    lecture3 = db.Column(db.String(10), nullable=False)
-
-db.create_all()
+    lecture_1 = db.Column(db.String(10), nullable=False)
+    lecture_2 = db.Column(db.String(10), nullable=False)
+    lecture_3 = db.Column(db.String(10), nullable=False)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/student_registration', methods=['GET', 'POST'])
-def student_registration():
+@app.route('/register', methods=['GET', 'POST'])
+def register():
     if request.method == 'POST':
+        surname = request.form['surname']
+        first_name = request.form['first_name']
+        class_name = request.form['class_name']
         email = request.form['email']
-        lecture1 = request.form['lecture1']
-        lecture2 = request.form['lecture2']
-        lecture3 = request.form['lecture3']
+        lecture_1 = request.form['lecture_1']
+        lecture_2 = request.form['lecture_2']
+        lecture_3 = request.form['lecture_3']
         
-        student = Student(email=email, lecture1=lecture1, lecture2=lecture2, lecture3=lecture3)
-        try:
-            db.session.add(student)
-            db.session.commit()
-            return redirect(url_for('index'))
-        except IntegrityError:
-            db.session.rollback()
-            return "E-mail már használatban van!"
+        new_student = Student(surname=surname, first_name=first_name,
+                              class_name=class_name, email=email,
+                              lecture_1=lecture_1, lecture_2=lecture_2,
+                              lecture_3=lecture_3)
+        db.session.add(new_student)
+        db.session.commit()
+        
+        flash('Registration successful!', 'success')
+        return redirect(url_for('index'))
 
-    return render_template('student_registration.html')
+    return render_template('register.html')
 
-@app.route('/admin_login')
-def admin_login():
-    return render_template('admin_login.html')
-
-@app.route('/admin_dashboard')
-def admin_dashboard():
+@app.route('/admin', methods=['GET'])
+def admin():
     students = Student.query.all()
-    return render_template('admin_dashboard.html', students=students)
+    return render_template('admin.html', students=students)
+
+@app.cli.command('init-db')
+def init_db():
+    """Initialize the database."""
+    db.create_all()
+    print('Initialized the database.')
 
 if __name__ == '__main__':
     app.run(debug=True)
